@@ -1,0 +1,4 @@
+*.tif
+*.png
+*.keras
+__pycache__/
