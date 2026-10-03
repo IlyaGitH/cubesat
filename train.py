@@ -4,7 +4,8 @@ from pathlib import Path
 
 import numpy as np
 import rasterio
-from sklearn.metrics import jaccard_score, precision_score, recall_score
+from sklearn.metrics import confusion_matrix, jaccard_score, precision_score, recall_score
+from sklearn.model_selection import train_test_split
 from tensorflow import keras
 
 from mask import read, scenes_of
@@ -31,10 +32,18 @@ def dataset(keys):
     return np.concatenate(Xs), np.concatenate(ys)
 
 
+def report(name, y, p):
+    pred = (p > 0.5).astype(int)
+    print(f'{name}: precision {precision_score(y, pred):.3f}  recall {recall_score(y, pred):.3f}  '
+          f'IoU {jaccard_score(y, pred):.3f}')
+    print(confusion_matrix(y, pred))
+
+
 def main(test_key):
     keys = [Path(p).stem for p in glob('masks/*.tif') if Path(p).stem != test_key]
     X, y = dataset(keys)
     print(f'обучение: {keys}, {len(y)} пикселей, поля {y.mean():.1%}')
+    xTrain, xTest, yTrain, yTest = train_test_split(X, y, test_size=0.4, random_state=42)
 
     model = keras.Sequential([
         keras.Input(shape=(len(FEATS),)),
@@ -43,7 +52,8 @@ def main(test_key):
         keras.layers.Dense(2, activation='softmax'),
     ])
     model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
-    model.fit(X, y, epochs=5, batch_size=4096, validation_split=0.1)
+    model.fit(xTrain, yTrain, epochs=5, batch_size=4096)
+    report('отложенные 40 % пикселей', yTest, model.predict(xTest, batch_size=65536, verbose=0)[:, 1])
     Path('models').mkdir(exist_ok=True)
     model.save('models/field_nn.keras')
 
@@ -51,9 +61,7 @@ def main(test_key):
     for s in scenes_of(test_key):
         Xt, yt, ok, profile = load(s, f'masks/{test_key}.tif')
         p = model.predict(Xt[ok], batch_size=65536, verbose=0)[:, 1]
-        pred = (p > 0.5).astype(int)
-        print(f'{Path(s).stem}: precision {precision_score(yt[ok], pred):.3f}  '
-              f'recall {recall_score(yt[ok], pred):.3f}  IoU {jaccard_score(yt[ok], pred):.3f}')
+        report(Path(s).stem, yt[ok], p)
         prob = np.full(len(Xt), np.nan, dtype='float32')
         prob[ok] = p
         profile.update(count=1, dtype='float32', nodata=np.nan)
