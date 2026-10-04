@@ -69,20 +69,22 @@ NDVI: вода и облака < 0, голая почва 0,1–0,2, густа�
 ## Запуск
 
 1. Вставить `gee/export.js` в редактор Earth Engine ([code.earthengine.google.com](https://code.earthengine.google.com/); работа с картой и коллекцией — [видео 1](https://www.youtube.com/watch?v=zNXCliP1QWs), сохранение в GeoTIFF — конец [видео 2](https://www.youtube.com/watch?v=9KstUZ_4FtA)). Поменять `region`, точку `roi`, `crs` (зона UTM: 37N — `EPSG:32637`, 38N — `EPSG:32638`) и даты, нажать Run, запустить задачи на вкладке Tasks. Файлы падают в папку `cubesat_scenes` на Google Диске ([пример GeoTIFF](https://drive.google.com/file/d/1GowKtT2j-XT3z-p4C36aVFmWLPUFJvaV/view?usp=sharing)).
-2. Разложить файлы так (ключ района — часть имени до первого `-`):
+2. На Google Диске перенести выгруженные `.tif` из `cubesat_scenes` в `cubesat_scenes/scenes` (ключ района — часть имени до первого `-`):
    ```
-   scenes/rostov_2025-2025-05-01.tif
-   scenes/rostov_2025-2025-06-01.tif
-   masks/
+   cubesat_scenes/scenes/orel_2025-2025-05-01.tif
+   cubesat_scenes/scenes/orel_2025-2025-06-01.tif
    ```
-3. В Colab:
+3. В Colab код берётся из репозитория, данные — с Диска:
    ```
-   !pip install rasterio
+   !pip -q install rasterio
+   !git clone -q https://github.com/IlyaGitH/cubesat /content/cubesat
+   import sys; sys.path.append('/content/cubesat')
    from google.colab import drive; drive.mount('/content/drive')
-   %cd /content/drive/MyDrive/cubesat
-   !python mask.py rostov_2025 krasnodar_2025 stavropol_2025
-   %run show.py scenes/rostov_2025-2025-06-01.tif
-   !python train.py stavropol_2025
+   %cd /content/drive/MyDrive/cubesat_scenes
+   !mkdir -p masks
+   !python /content/cubesat/mask.py orel_2025
+   %run /content/cubesat/show.py scenes/orel_2025-2025-06-01.tif
+   !python /content/cubesat/train.py orel_2025
    ```
    `train.py` учится на всех масках, кроме указанного района, и пишет карты вероятности «поле» в `out/`.
 
