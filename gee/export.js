@@ -1,5 +1,5 @@
-var region = 'rostov_2025';
-var roi = ee.Geometry.Point([40.2, 47.3]).buffer(10000).bounds();
+var region = 'orel_2025';
+var roi = ee.Geometry.Point([36.35, 52.67]).buffer(10000).bounds();
 var crs = 'EPSG:32637';
 var months = [['2025-05-01', '2025-05-31'], ['2025-06-01', '2025-06-30'], ['2025-07-01', '2025-08-31']];
 
