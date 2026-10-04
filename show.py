@@ -9,7 +9,8 @@ from mask import read
 
 scene = sys.argv[1]
 b, _ = read(scene)
-rgb = np.clip(np.dstack([b['SR_B4'], b['SR_B3'], b['SR_B2']]) / 0.3, 0, 1)
+rgb = np.dstack([b['SR_B4'], b['SR_B3'], b['SR_B2']])
+rgb = np.clip(rgb / np.nanpercentile(rgb, 98), 0, 1)
 panels = [('RGB (B4, B3, B2)', rgb, None, 0), ('NDVI', b['NDVI'], 'RdYlGn', -1), ('NDMI', b['NDMI'], 'BrBG', -1)]
 
 key = Path(scene).stem.split('-')[0]
