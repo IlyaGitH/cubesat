@@ -1,9 +1,6 @@
-// Район: квадрат 20×20 км вокруг точки (Орловская область)
 var roi = ee.Geometry.Point([36.35, 52.67]).buffer(10000).bounds();
 Map.centerObject(roi, 11);
 
-// Самый безоблачный снимок Landsat 8 за период -> GeoTIFF на Google Диск
-// Каналы файла: B2 B3 B4 B5 B6 B7 NDVI NDBI NDMI, пусто = -9999
 function exportScene(start, end) {
   var image = ee.ImageCollection('LANDSAT/LC08/C02/T1_RT')
     .filterDate(start, end)
@@ -12,9 +9,7 @@ function exportScene(start, end) {
     .first();
   print('A L8 scene ' + start, image);
 
-  // облака, тени и пустые пиксели: биты 0–4 QA_PIXEL
   var clear = image.select('QA_PIXEL').bitwiseAnd(31).eq(0);
-  // яркость -> отражение (коэффициенты Collection 2: 2e-5, -0.1)
   var refl = image.select(['B2', 'B3', 'B4', 'B5', 'B6', 'B7'])
     .multiply(0.00002).add(-0.1)
     .updateMask(clear);
@@ -31,7 +26,7 @@ function exportScene(start, end) {
     folder: 'cubesat_scenes',
     scale: 30,
     region: roi,
-    crs: 'EPSG:32637',  // одна сетка для всех дат, иначе np.stack в ноутбуке упадёт
+    crs: 'EPSG:32637',
     maxPixels: 1e13
   });
 }
