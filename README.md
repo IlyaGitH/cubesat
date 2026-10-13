@@ -50,7 +50,7 @@ NDVI: вода и облака < 0, голая почва 0,1–0,2, густа�
 поле = (NDVI_max > 0.5) и (NDVI_max − NDVI_min > 0.25) и не (NDBI_min > 0)
 ```
 
-Затем морфологическое открытие 3×3 (убирает дороги и лесополосы) и удаление пятен меньше 20 пикселей (~1,8 га). Если снимок один — грубо: `NDVI > 0.4 и NDBI < 0`. Проверка — сравнение с классом «пашня» ESA WorldCover (значение 40 в коллекции `ESA/WorldCover/v200`, [каталог Earth Engine](https://developers.google.com/earth-engine/datasets/catalog/ESA_WorldCover_v200)), совпадение не ниже 80–85 %.
+Затем морфологическое открытие 3×3 (убирает дороги и лесополосы) и удаление пятен меньше 20 пикселей (~1,8 га). Если снимок один — грубо: `NDVI > 0.4 и NDBI < 0`. Проверка — сравнение с классом «пашня» ESA WorldCover (значение 40 в коллекции `ESA/WorldCover/v200`, [каталог Earth Engine](https://developers.google.com/earth-engine/datasets/catalog/ESA_WorldCover_v200)), совпадение не ниже 80–85 %. Обоснование порогов 0,5 и 0,25 со ссылками и перебор порогов по WorldCover — `mask.ipynb`.
 
 ## Нейросеть: этап 1 — выделение полей
 
@@ -68,7 +68,7 @@ NDVI: вода и облака < 0, голая почва 0,1–0,2, густа�
 
 ## Запуск
 
-1. Вставить `gee/export.js` в редактор Earth Engine ([code.earthengine.google.com](https://code.earthengine.google.com/); работа с картой и коллекцией — [видео 1](https://www.youtube.com/watch?v=zNXCliP1QWs), сохранение в GeoTIFF — конец [видео 2](https://www.youtube.com/watch?v=9KstUZ_4FtA)). Для каждой даты скрипт берёт самый безоблачный снимок периода (`sort('CLOUD_COVER').first()`), маскирует облака по `QA_PIXEL` и считает индексы. Поменять точку `roi`, `description` (ключ района), `crs` (зона UTM: 37N — `EPSG:32637`, 38N — `EPSG:32638`) и даты в вызовах `exportScene`, нажать Run, запустить задачи на вкладке Tasks. Файлы падают в папку `cubesat_scenes` на Google Диске: каналы `B2 B3 B4 B5 B6 B7 NDVI NDBI NDMI` (отражение), пусто = −9999.
+1. Вставить `gee/export.js` в редактор Earth Engine ([code.earthengine.google.com](https://code.earthengine.google.com/); работа с картой и коллекцией — [видео 1](https://www.youtube.com/watch?v=zNXCliP1QWs), сохранение в GeoTIFF — конец [видео 2](https://www.youtube.com/watch?v=9KstUZ_4FtA)). Для каждой даты скрипт берёт самый безоблачный снимок периода (`sort('CLOUD_COVER').first()`), маскирует облака по `QA_PIXEL` и считает индексы. Поменять точку `roi`, `description` (ключ района), `crs` (зона UTM: 37N — `EPSG:32637`, 38N — `EPSG:32638`) и даты в вызовах `exportScene`, нажать Run, запустить задачи на вкладке Tasks. Файлы падают в папку `cubesat_scenes` на Google Диске: каналы `B2 B3 B4 B5 B6 B7 NDVI NDBI NDMI` (отражение), пусто = −9999. Там же `worldcover-orel_2025.tif` — карта ESA WorldCover на той же сетке, остаётся в `cubesat_scenes` для `mask.ipynb`.
 2. На Google Диске перенести выгруженные `.tif` из `cubesat_scenes` в `cubesat_scenes/scenes` (ключ района — часть имени до первого `-`):
    ```
    cubesat_scenes/scenes/orel_2025-2025-05-01.tif

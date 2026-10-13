@@ -34,3 +34,13 @@ function save(start, end) {
 save('2025-05-01', '2025-05-31');
 save('2025-06-01', '2025-06-30');
 save('2025-07-01', '2025-08-31');
+
+Export.image.toDrive({
+  image: ee.ImageCollection('ESA/WorldCover/v200').first(),
+  description: 'worldcover-orel_2025',
+  folder: 'cubesat_scenes',
+  scale: 30,
+  region: roi,
+  crs: 'EPSG:32637',
+  maxPixels: 1e13
+});
