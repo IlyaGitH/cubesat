@@ -1,24 +1,41 @@
 // Район: квадрат 20×20 км вокруг точки (Орловская область)
 var roi = ee.Geometry.Point([36.35, 52.67]).buffer(10000).bounds();
-
-// 1. Самый безоблачный снимок Landsat 8 за период
-var image = ee.ImageCollection('LANDSAT/LC08/C02/T1_RT')
-  .filterDate('2025-06-01', '2025-06-30')
-  .filterBounds(roi)
-  .sort('CLOUD_COVER')
-  .first();
-print('A L8 scene:', image);
-
-// 2. Цветное изображение: каналы B4, B3, B2
-var trueColour = {bands: ['B4', 'B3', 'B2'], min: 5000, max: 12000};
 Map.centerObject(roi, 11);
-Map.addLayer(image.clip(roi), trueColour, 'true-colour image');
 
-// 3. Экспорт на Google Диск: имя = ключ района + дата начала периода
-Export.image.toDrive({
-  image: image.int16(),
-  description: 'orel_2025-2025-06-01',
-  scale: 30,
-  region: roi,
-  maxPixels: 1e13
-});
+// Самый безоблачный снимок Landsat 8 за период -> GeoTIFF на Google Диск
+// Каналы файла: B2 B3 B4 B5 B6 B7 NDVI NDBI NDMI, пусто = -9999
+function exportScene(start, end) {
+  var image = ee.ImageCollection('LANDSAT/LC08/C02/T1_RT')
+    .filterDate(start, end)
+    .filterBounds(roi)
+    .sort('CLOUD_COVER')
+    .first();
+  print('A L8 scene ' + start, image);
+
+  // облака, тени и пустые пиксели: биты 0–4 QA_PIXEL
+  var clear = image.select('QA_PIXEL').bitwiseAnd(31).eq(0);
+  // яркость -> отражение (коэффициенты Collection 2: 2e-5, -0.1)
+  var refl = image.select(['B2', 'B3', 'B4', 'B5', 'B6', 'B7'])
+    .multiply(0.00002).add(-0.1)
+    .updateMask(clear);
+  var out = refl.addBands([
+    refl.normalizedDifference(['B5', 'B4']).rename('NDVI'),
+    refl.normalizedDifference(['B6', 'B5']).rename('NDBI'),
+    refl.normalizedDifference(['B5', 'B6']).rename('NDMI')
+  ]).toFloat().unmask(-9999);
+
+  Map.addLayer(refl.clip(roi), {bands: ['B4', 'B3', 'B2'], min: 0, max: 0.15}, start);
+  Export.image.toDrive({
+    image: out,
+    description: 'orel_2025-' + start,
+    folder: 'cubesat_scenes',
+    scale: 30,
+    region: roi,
+    crs: 'EPSG:32637',  // одна сетка для всех дат, иначе np.stack в ноутбуке упадёт
+    maxPixels: 1e13
+  });
+}
+
+exportScene('2025-05-01', '2025-05-31');
+exportScene('2025-06-01', '2025-06-30');
+exportScene('2025-07-01', '2025-08-31');

@@ -30,7 +30,7 @@
 
 ## Индексы
 
-Считаются по коэффициентам отражения. Landsat 8 Level-1 (`LANDSAT/LC08/C02/T1_RT`): отражение = `B* × 0.00002 − 0.1` (свойства снимка `REFLECTANCE_MULT_BAND_*`, `REFLECTANCE_ADD_BAND_*`), пересчёт в `mask.py`; назначение каналов B1–B11 ([каталог Earth Engine](https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_RT?hl=ru#bands)).
+Считаются по коэффициентам отражения. Landsat 8 Level-1 (`LANDSAT/LC08/C02/T1_RT`): отражение = `B* × 0.00002 − 0.1` (свойства снимка `REFLECTANCE_MULT_BAND_*`, `REFLECTANCE_ADD_BAND_*`), пересчёт в `gee/export.js`; назначение каналов B1–B11 ([каталог Earth Engine](https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_RT?hl=ru#bands)).
 
 | Индекс | Формула | Landsat 8 | Sentinel-2 | Гиперспектр | Стадия |
 |---|---|---|---|---|---|
@@ -68,8 +68,8 @@ NDVI: вода и облака < 0, голая почва 0,1–0,2, густа�
 
 ## Запуск
 
-1. Вставить `gee/export.js` в редактор Earth Engine ([code.earthengine.google.com](https://code.earthengine.google.com/); работа с картой и коллекцией — [видео 1](https://www.youtube.com/watch?v=zNXCliP1QWs), сохранение в GeoTIFF — конец [видео 2](https://www.youtube.com/watch?v=9KstUZ_4FtA)). Скрипт берёт самый безоблачный снимок за период (`sort('CLOUD_COVER').first()`). Поменять точку `roi`, даты в `filterDate` и `description` (`<район>-<дата>`), нажать Run, запустить задачу на вкладке Tasks; повторить для 2–3 дат сезона. Файлы падают в корень Google Диска: 17 каналов `T1_RT` (B1–B11, QA, углы), int16.
-2. На Google Диске перенести выгруженные `.tif` в `cubesat_scenes/scenes` (ключ района — часть имени до первого `-`):
+1. Вставить `gee/export.js` в редактор Earth Engine ([code.earthengine.google.com](https://code.earthengine.google.com/); работа с картой и коллекцией — [видео 1](https://www.youtube.com/watch?v=zNXCliP1QWs), сохранение в GeoTIFF — конец [видео 2](https://www.youtube.com/watch?v=9KstUZ_4FtA)). Для каждой даты скрипт берёт самый безоблачный снимок периода (`sort('CLOUD_COVER').first()`), маскирует облака по `QA_PIXEL` и считает индексы. Поменять точку `roi`, `description` (ключ района), `crs` (зона UTM: 37N — `EPSG:32637`, 38N — `EPSG:32638`) и даты в вызовах `exportScene`, нажать Run, запустить задачи на вкладке Tasks. Файлы падают в папку `cubesat_scenes` на Google Диске: каналы `B2 B3 B4 B5 B6 B7 NDVI NDBI NDMI` (отражение), пусто = −9999.
+2. На Google Диске перенести выгруженные `.tif` из `cubesat_scenes` в `cubesat_scenes/scenes` (ключ района — часть имени до первого `-`):
    ```
    cubesat_scenes/scenes/orel_2025-2025-05-01.tif
    cubesat_scenes/scenes/orel_2025-2025-06-01.tif
