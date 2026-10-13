@@ -30,7 +30,7 @@
 
 ## Индексы
 
-Считаются по коэффициентам отражения. Landsat 8 Level-2 (`LANDSAT/LC08/C02/T1_L2`): отражение = `SR_B* × 0.0000275 − 0.2`; назначение каналов B1–B11 ([каталог Earth Engine](https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_RT?hl=ru#bands)).
+Считаются по коэффициентам отражения. Landsat 8 Level-1 (`LANDSAT/LC08/C02/T1_RT`): отражение = `B* × 0.00002 − 0.1` (свойства снимка `REFLECTANCE_MULT_BAND_*`, `REFLECTANCE_ADD_BAND_*`), пересчёт в `mask.py`; назначение каналов B1–B11 ([каталог Earth Engine](https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_RT?hl=ru#bands)).
 
 | Индекс | Формула | Landsat 8 | Sentinel-2 | Гиперспектр | Стадия |
 |---|---|---|---|---|---|
@@ -68,8 +68,8 @@ NDVI: вода и облака < 0, голая почва 0,1–0,2, густа�
 
 ## Запуск
 
-1. Вставить `gee/export.js` в редактор Earth Engine ([code.earthengine.google.com](https://code.earthengine.google.com/); работа с картой и коллекцией — [видео 1](https://www.youtube.com/watch?v=zNXCliP1QWs), сохранение в GeoTIFF — конец [видео 2](https://www.youtube.com/watch?v=9KstUZ_4FtA)). Поменять `region`, точку `roi`, `crs` (зона UTM: 37N — `EPSG:32637`, 38N — `EPSG:32638`) и даты, нажать Run, запустить задачи на вкладке Tasks. Файлы падают в папку `cubesat_scenes` на Google Диске ([пример GeoTIFF](https://drive.google.com/file/d/1GowKtT2j-XT3z-p4C36aVFmWLPUFJvaV/view?usp=sharing)).
-2. На Google Диске перенести выгруженные `.tif` из `cubesat_scenes` в `cubesat_scenes/scenes` (ключ района — часть имени до первого `-`):
+1. Вставить `gee/export.js` в редактор Earth Engine ([code.earthengine.google.com](https://code.earthengine.google.com/); работа с картой и коллекцией — [видео 1](https://www.youtube.com/watch?v=zNXCliP1QWs), сохранение в GeoTIFF — конец [видео 2](https://www.youtube.com/watch?v=9KstUZ_4FtA)). Скрипт берёт самый безоблачный снимок за период (`sort('CLOUD_COVER').first()`). Поменять точку `roi`, даты в `filterDate` и `description` (`<район>-<дата>`), нажать Run, запустить задачу на вкладке Tasks; повторить для 2–3 дат сезона. Файлы падают в корень Google Диска: 17 каналов `T1_RT` (B1–B11, QA, углы), int16.
+2. На Google Диске перенести выгруженные `.tif` в `cubesat_scenes/scenes` (ключ района — часть имени до первого `-`):
    ```
    cubesat_scenes/scenes/orel_2025-2025-05-01.tif
    cubesat_scenes/scenes/orel_2025-2025-06-01.tif
@@ -94,7 +94,7 @@ NDVI: вода и облака < 0, голая почва 0,1–0,2, густа�
 
 | Источник | Что внутри | Зачем |
 |---|---|---|
-| Landsat 8 Level-2 | Отражение, 30 м, с 2013 ([каталог Earth Engine](https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_RT?hl=ru#bands)) | Основные снимки этапа 1 |
+| Landsat 8 Level-1 (`T1_RT`) | Яркость (DN) → отражение, 30 м, с 2013 ([каталог Earth Engine](https://developers.google.com/earth-engine/datasets/catalog/LANDSAT_LC08_C02_T1_RT?hl=ru#bands)) | Основные снимки этапа 1 |
 | Fields of The World | 70 462 фрагмента Sentinel-2 с масками полей ([arXiv](https://arxiv.org/abs/2409.16252v1)) | Проверка и дообучение |
 | ESA WorldCover | Карта покрова за 2021 год, 10 м, по Sentinel-1 и Sentinel-2, 11 классов, пашня = 40, CC-BY-4.0 ([каталог Earth Engine](https://developers.google.com/earth-engine/datasets/catalog/ESA_WorldCover_v200)) | Сверка маски |
 | EnMAP | 420–2450 нм, 30 м, бесплатно для науки ([eoPortal](https://eoportal.org/satellite-missions/enmap)) | Этап 2: PRI, REP, классы стресса |

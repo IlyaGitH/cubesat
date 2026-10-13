@@ -6,15 +6,29 @@ import numpy as np
 import rasterio
 from scipy import ndimage
 
-BANDS = ['SR_B2', 'SR_B3', 'SR_B4', 'SR_B5', 'SR_B6', 'SR_B7', 'NDVI', 'NDMI', 'NDBI']
+# порядок каналов LANDSAT/LC08/C02/T1_RT
+BANDS = ['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10', 'B11',
+         'QA_PIXEL', 'QA_RADSAT', 'SAA', 'SZA', 'VAA', 'VZA']
+
+
+def nd(a, b):
+    return (a - b) / (a + b)
 
 
 def read(path):
     with rasterio.open(path) as src:
         a = src.read().astype('float32')
         profile = src.profile
-    a[a == -9999] = np.nan
-    return dict(zip(BANDS, a)), profile
+    a[a == 0] = np.nan
+    b = dict(zip(BANDS, a))
+    # ponytail: TOA-отражение без поправки на высоту Солнца (в индексах сокращается);
+    # 2e-5 и -0.1 — REFLECTANCE_MULT/ADD_BAND_* из свойств снимка Collection 2
+    for k in BANDS[:9]:
+        b[k] = b[k] * 2e-5 - 0.1
+    b['NDVI'] = nd(b['B5'], b['B4'])
+    b['NDMI'] = nd(b['B5'], b['B6'])
+    b['NDBI'] = nd(b['B6'], b['B5'])
+    return b, profile
 
 
 def scenes_of(key):
