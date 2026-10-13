@@ -1,7 +1,7 @@
 var roi = ee.Geometry.Point([36.35, 52.67]).buffer(10000).bounds();
 Map.centerObject(roi, 11);
 
-function exportScene(start, end) {
+function save(start, end) {
   var image = ee.ImageCollection('LANDSAT/LC08/C02/T1_RT')
     .filterDate(start, end)
     .filterBounds(roi)
@@ -31,6 +31,6 @@ function exportScene(start, end) {
   });
 }
 
-exportScene('2025-05-01', '2025-05-31');
-exportScene('2025-06-01', '2025-06-30');
-exportScene('2025-07-01', '2025-08-31');
+save('2025-05-01', '2025-05-31');
+save('2025-06-01', '2025-06-30');
+save('2025-07-01', '2025-08-31');
